@@ -1,0 +1,49 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test files
+
+backend/coverage
+
+# Env files
+.env
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Vite
+.vite/
+
+# Logs
+*.log
+
+# Kubernetes
+k8s/backend-secret.yml
+
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform.tfvars
+
+# Terraform-bootstrap
+terraform-bootstrap/.terraform/
+terraform-bootstrap/.terraform.lock.hcl
+terraform-bootstrap/terraform.tfstate
+terraform-bootstrap/terraform.tfstate.backup
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+#tmp
+clear
