@@ -226,9 +226,15 @@ kubectl port-forward -n dashlab svc/frontend 8080:80
 O pipeline será configurado quando o homelab estiver de pé com Gitea e Woodpecker CI.
  
 Fluxo planejado:
- 
-```
-push → test → build → push registry local → deploy k3s → rollout verify
+
+```mermaid
+flowchart LR
+  push[git push\nGitea] --> test[test\nnpm test]
+  test -->|falha| block([bloqueado])
+  test -->|passa| build[build\nDocker image]
+  build --> registry[(push\nRegistry local)]
+  registry --> deploy[deploy\nkubectl apply]
+  deploy --> verify[rollout verify\nkubectl rollout status]
 ```
  
 | Etapa | Descrição |
