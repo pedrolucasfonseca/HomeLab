@@ -26,18 +26,6 @@ build/
 # Kubernetes
 k8s/backend-secret.yml
 
-# Terraform
-terraform/.terraform/
-terraform/terraform.tfstate
-terraform/terraform.tfstate.*
-terraform/terraform.tfvars
-
-# Terraform-bootstrap
-terraform-bootstrap/.terraform/
-terraform-bootstrap/.terraform.lock.hcl
-terraform-bootstrap/terraform.tfstate
-terraform-bootstrap/terraform.tfstate.backup
-
 # OS / Editor
 .DS_Store
 Thumbs.db
