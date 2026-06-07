@@ -7,8 +7,6 @@ pnpm-debug.log*
 
 # Test files
 
-backend/coverage
-
 # Env files
 .env
 .env.*.local

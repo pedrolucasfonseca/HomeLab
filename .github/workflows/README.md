@@ -1,1 +1,0 @@
-# pipeline será configurado quando o homelab estiver de pé
