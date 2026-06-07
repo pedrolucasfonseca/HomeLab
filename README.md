@@ -1,7 +1,7 @@
 # Homelab
  
-> Fork do [DashLab](https://github.com/pedrolucasfonseca/DashLab) adaptado para self-hosted. Remove toda a camada AWS e substitui por ferramentas open source leves o suficiente para rodar em hardware doméstico.
- 
+> Ambiente de estudos DevOps self-hosted. Usando Backend Node.js + Frontend React como base para aprender infraestrutura, CI/CD, Kubernetes e observabilidade em hardware local.
+
 ---
  
 ## Índice
@@ -17,11 +17,12 @@
 - [Kubernetes](#kubernetes)
 - [CI/CD](#cicd)
 - [Roadmap](#roadmap)
+
 ---
  
 ## Visão Geral
  
-DashLab Homelab é um ambiente de estudos DevOps self-hosted baseado no DashLab original. A aplicação em si é simples — um backend Node.js/Express e um frontend React — justamente para o foco ficar na infraestrutura ao redor.
+O Homelab é um ambiente de estudos DevOps self-hosted. A aplicação em si é simples um backend Node.js/Express e um frontend React para justamente o foco ficar na infraestrutura.
  
 O projeto cobre os principais pilares de DevOps em ambiente local:
  
@@ -78,48 +79,49 @@ flowchart LR
   prometheus --> k3s
 ```
  
-### Diferenças em relação ao DashLab original
- 
-| DashLab (AWS) | DashLab Homelab |
-|---------------|-----------------|
-| EKS | k3s |
-| ECR | Docker Registry self-hosted |
-| ALB + Ingress Controller | Traefik (incluso no k3s) |
-| GitHub Actions + OIDC | Woodpecker CI |
-| Terraform | Ansible |
-| CloudWatch | Prometheus + Grafana |
- 
 ---
  
 ## Estrutura do Repositório
  
 ```
-DashLab-homelab/
-├── .github/
-│   └── workflows/
-│       └── README.md # pipeline migrado para Woodpecker
-├── .woodpecker/
-│   └── pipeline.yml # TODO: configurar quando homelab estiver de pé
+HomeLab/
 ├── backend/
 │   ├── src/
 │   │   ├── routes/
 │   │   │   ├── api.js
-│   │   │   └── health.js
+│   │   │   ├── api.test.js
+│   │   │   ├── health.js
+│   │   │   └── health.test.js
 │   │   ├── app.js
 │   │   └── index.js
 │   ├── Dockerfile
+│   ├── .dockerignore
+│   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   └── App.jsx
+│   │   ├── assets/
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── public/
 │   ├── Dockerfile
-│   └── nginx.conf
+│   ├── .dockerignore
+│   ├── .env.example
+│   ├── nginx.conf
+│   └── package.json
 ├── k8s/
-│   ├── namespace.yml
 │   ├── backend-deployment.yml
 │   ├── frontend-deployment.yml
-│   └── ingress.yml # TODO: ajustar anotações para Traefik
-└── docker-compose.yml
+│   ├── ingress.yml
+│   └── namespace.yml
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── makefile
+└── README.md
 ```
  
 ---
@@ -151,13 +153,13 @@ O frontend estará disponível em `http://localhost`.
  
 ```bash
 # buildar e importar as imagens
-docker build -t dashlab-backend:local ./backend
-docker build -t dashlab-frontend:local ./frontend
+docker build -t homelab-backend:local ./backend
+docker build -t homelab-frontend:local ./frontend
  
-docker save dashlab-backend:local -o /tmp/backend.tar
+docker save homelab-backend:local -o /tmp/backend.tar
 sudo k3s ctr images import /tmp/backend.tar
  
-docker save dashlab-frontend:local -o /tmp/frontend.tar
+docker save homelab-frontend:local -o /tmp/frontend.tar
 sudo k3s ctr images import /tmp/frontend.tar
  
 # aplicar os manifests
@@ -166,7 +168,7 @@ kubectl apply -f k8s/backend-deployment.yml
 kubectl apply -f k8s/frontend-deployment.yml
  
 # acessar via port-forward enquanto o Ingress não está configurado
-kubectl port-forward -n dashlab svc/frontend 8080:80
+kubectl port-forward -n homelab svc/frontend 8080:80
 ```
  
 Frontend disponível em `http://localhost:8080`.
@@ -198,7 +200,7 @@ curl http://localhost:3001/health
 # {"status":"ok","timestamp":"2026-01-01T00:00:00.000Z"}
  
 curl http://localhost:3001/api
-# {"message":"DashLab API","version":"0.3.0"}
+# {"message":"HomeLab API","version":"0.1.0"}
 ```
  
 ---
@@ -207,17 +209,33 @@ curl http://localhost:3001/api
  
 ```bash
 # verificar pods
-kubectl get pods -n dashlab
+kubectl get pods -n homelab
  
 # verificar todos os recursos
-kubectl get all -n dashlab
+kubectl get all -n homelab
  
 # logs do backend
-kubectl logs -n dashlab deploy/backend -f
+kubectl logs -n homelab deploy/backend -f
  
 # acessar o frontend
-kubectl port-forward -n dashlab svc/frontend 8080:80
+kubectl port-forward -n homelab svc/frontend 8080:80
 ```
+
+---
+
+## Makefile
+
+Atalhos para os comandos mais usados no dia a dia do projeto.
+
+| Comando | Descrição |
+|---------|-----------|
+| `make up` | Sobe o ambiente local em background |
+| `make down` | Derruba o ambiente local |
+| `make ps` | Lista os containers em execução |
+| `make logs` | Acompanha os logs em tempo real |
+| `make test` | Roda os testes do backend |
+| `make dev-front` | Inicia o frontend em modo desenvolvimento |
+| `make dev-back` | Inicia o backend em modo desenvolvimento |
  
 ---
  
