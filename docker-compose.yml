@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: dashlab-backend
+    container_name: homelab-backend
     ports:
       - "3001:3001"
     environment:
@@ -19,7 +19,7 @@ services:
 
   db:
     image: postgres:16
-    container_name: dashlab_db
+    container_name: homelab-db
     ports:
       - "5432:5432"
     environment:
@@ -37,7 +37,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: dashlab-frontend
+    container_name: homelab-frontend
     ports:
       - "80:80"
     environment:

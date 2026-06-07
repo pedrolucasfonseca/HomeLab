@@ -12,7 +12,7 @@ function App() {
 
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '2rem' }}>
-      <h1>DashLab</h1>
+      <h1>HomeLab</h1>
       <p>Painel de monitoramento da aplicação</p>
 
       <div style={{ marginTop: '2rem', padding: '1rem', background: '#f0f0f0', borderRadius: '8px' }}>

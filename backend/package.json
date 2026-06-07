@@ -1,5 +1,5 @@
 {
-  "name": "dashlab",
+  "name": "homelab",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pedrolucasfonseca/DashLab.git"
+    "url": "git+https://github.com/pedrolucasfonseca/HomeLab.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/pedrolucasfonseca/DashLab/issues"
+    "url": "https://github.com/pedrolucasfonseca/HomeLab/issues"
   },
-  "homepage": "https://github.com/pedrolucasfonseca/DashLab#readme",
+  "homepage": "https://github.com/pedrolucasfonseca/HomeLab#readme",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: dashlab
+  namespace: homelab
 spec:
   replicas: 2
   selector:
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: dashlab-frontend:local
+          image: frontend:local
           imagePullPolicy: Never
           ports:
             - containerPort: 80
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend
-  namespace: dashlab
+  namespace: homelab
 spec:
   type: ClusterIP
   selector:
