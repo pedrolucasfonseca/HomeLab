@@ -11,6 +11,7 @@ RUN apk add --no-cache nodejs
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY src/ ./src/
+COPY package*.json ./
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
