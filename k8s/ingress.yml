@@ -7,6 +7,7 @@ metadata:
   name: homelab-ingress
   namespace: homelab
 spec:
+  ingressClassName: traefik
   rules:
     - http:
         paths:

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend:local
+          image: homelab-frontend:local
           imagePullPolicy: Never
           ports:
             - containerPort: 80
@@ -39,7 +39,7 @@ spec:
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 80
             initialDelaySeconds: 15
             periodSeconds: 20
