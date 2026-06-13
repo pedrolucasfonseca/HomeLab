@@ -37,18 +37,21 @@ O projeto cobre os principais pilares de DevOps em ambiente local:
  
 | Componente | Especificação |
 |------------|--------------|
-| Servidor | Lenovo ThinkCentre M920q |
+| Servidor | Lenovo ThinkCentre M920s |
 | CPU | Intel Core i5/i7 (8ª/9ª geração) |
-| RAM | 16 GB (expansível) |
+| RAM | 16 GB DDR4 (mínimo, expansível até 64 GB, 16 gb cada slot) |
+| Armazenamento | 256 GB SSD (mínimo, expansível até 4 TB SSD + HDD) |
 | SO | Ubuntu Server 24.04 LTS |
 | Uso | Servidor dedicado 24/7 |
- 
-O ThinkCentre M920q foi escolhido pelo baixo consumo energético (~15–35W), alto custo-benefício, formato compacto e estabilidade para operação contínua
+
+O ThinkCentre M920s foi escolhido pelo alto custo-benefício no mercado de usados, formato compacto SFF, baixo consumo energético (~35–65W), suporte a até 64 GB DDR4 e confiabilidade corporativa para operação contínua.
  
 ---
  
 ## Stack
- 
+
+### Atual
+
 | Camada | Tecnologia |
 |--------|-----------|
 | Frontend | React + Vite |
@@ -56,6 +59,11 @@ O ThinkCentre M920q foi escolhido pelo baixo consumo energético (~15–35W), al
 | Containers | Docker + Docker Compose |
 | Orquestração | Kubernetes (k3s) |
 | Ingress | Traefik (incluso no k3s) |
+
+### Futura
+
+| Camada | Tecnologia |
+|--------|-----------|
 | CI/CD | Woodpecker CI |
 | Source Control | Gitea |
 | Registry | Docker Registry (self-hosted) |
@@ -269,7 +277,7 @@ flowchart LR
  
 - [x] Docker Compose funcionando localmente
 - [x] k3s local com manifests adaptados
-- [ ] Ubuntu Server 24.04 no ThinkCentre M920q
+- [ ] Ubuntu Server 24.04 no ThinkCentre M920s
 - [ ] Ansible playbook para setup do servidor
 - [ ] Gitea self-hosted
 - [ ] Docker Registry self-hosted
