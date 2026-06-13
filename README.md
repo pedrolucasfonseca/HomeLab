@@ -15,6 +15,7 @@
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [API](#api)
 - [Kubernetes](#kubernetes)
+- [Testes](#testes)
 - [CI/CD](#cicd)
 - [Roadmap](#roadmap)
 
@@ -72,7 +73,7 @@ O ThinkCentre M920s foi escolhido pelo alto custo-benefício no mercado de usado
  
 ---
  
-## Arquitetura
+## Arquitetura (Alvo)
  
 ```mermaid
 flowchart LR
@@ -119,6 +120,9 @@ HomeLab/
 │   ├── .env.example
 │   ├── nginx.conf
 │   └── package.json
+├── e2e/
+│   ├── container.test.js
+│   └── smoke.sh
 ├── k8s/
 │   ├── backend-deployment.yml
 │   ├── frontend-deployment.yml
@@ -241,10 +245,41 @@ Atalhos para os comandos mais usados no dia a dia do projeto.
 | `make down` | Derruba o ambiente local |
 | `make ps` | Lista os containers em execução |
 | `make logs` | Acompanha os logs em tempo real |
-| `make test` | Roda os testes do backend |
+| `make test` | Roda os testes unitários do backend |
+| `make e2e-supertest` | Sobe os containers, roda os testes E2E e derruba |
 | `make dev-front` | Inicia o frontend em modo desenvolvimento |
 | `make dev-back` | Inicia o backend em modo desenvolvimento |
+| `make validate-k8s` | Valida os manifests Kubernetes com kubeconform |
  
+---
+
+## Testes
+
+### Unitários
+
+```bash
+make test
+# ou: cd backend && npm test
+```
+
+Testes de rotas com Jest + Supertest localizados em `backend/src/routes/*.test.js`.
+
+### E2E (container)
+
+```bash
+make e2e-supertest
+```
+
+Sobe o stack via Compose, executa `e2e/container.test.js` contra `http://localhost:3001` e derruba os containers ao final.
+
+### Smoke test
+
+```bash
+bash e2e/smoke.sh
+```
+
+Valida os endpoints via `http://localhost` (porta 80). Funciona com Docker Compose — o nginx do frontend faz proxy de `/api` e `/health` para o backend.
+
 ---
  
 ## CI/CD
@@ -277,6 +312,7 @@ flowchart LR
  
 - [x] Docker Compose funcionando localmente
 - [x] k3s local com manifests adaptados
+- [x] Testes E2E contra containers
 - [ ] Ubuntu Server 24.04 no ThinkCentre M920s
 - [ ] Ansible playbook para setup do servidor
 - [ ] Gitea self-hosted
