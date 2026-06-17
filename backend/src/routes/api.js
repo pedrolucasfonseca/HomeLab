@@ -1,7 +1,8 @@
 const router = require('express').Router();
+const { version } = require('../../package.json')
 
 router.get('/', (req, res) => {
-    res.json({ message: 'HomeLab API', version: '0.1.0' });
+    res.json({ message: 'HomeLab API', version });
 });
 
 module.exports = router;
