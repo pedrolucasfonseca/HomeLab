@@ -1,5 +1,6 @@
 const { describe } = require('node:test');
 const request = require('supertest');
+const { version } = require('../backend/package.json')
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
@@ -17,7 +18,7 @@ describe('container E2E', () => {
 
         expect(res.status).toBe(200);
         expect(res.body.message).toBe('HomeLab API');
-        expect(res.body.version).toBe('0.1.0');
+        expect(res.body.version).toBe(version);
     });
 
     test('non-existent route returns 404', async () => {
