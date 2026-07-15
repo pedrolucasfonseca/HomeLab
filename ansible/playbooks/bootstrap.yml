@@ -1,0 +1,15 @@
+---
+- name: Configuração base em todos os nós do cluster
+  hosts: k3s_cluster
+  roles:
+    - common
+
+- name: Instalar k3s no control-plane
+  hosts: k3s_control_plane
+  roles:
+    - k3s_control_plane
+
+- name: Instalar k3s nos workers e unir ao cluster
+  hosts: workers
+  roles:
+    - k3s_worker

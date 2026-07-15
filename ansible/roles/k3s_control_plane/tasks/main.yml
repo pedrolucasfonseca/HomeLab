@@ -1,0 +1,23 @@
+---
+- name: Instalar k3s como servidor (control-plane)
+  become: true
+  ansible.builtin.shell: curl -sfL https://get.k3s.io | sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Aguardar o kubeconfig do k3s ficar disponível
+  become: true
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    timeout: 60
+
+- name: Ler o token de join do cluster
+  become: true
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_node_token_raw
+
+- name: Expor token e URL do control-plane pros workers
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_node_token_raw.content | b64decode | trim }}"
+    k3s_url: "https://{{ ansible_host }}:6443"
