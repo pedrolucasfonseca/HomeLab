@@ -15,6 +15,7 @@
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [API](#api)
 - [Kubernetes](#kubernetes)
+- [Ansible](#ansible)
 - [Testes](#testes)
 - [CI/CD](#cicd)
 - [Roadmap](#roadmap)
@@ -35,17 +36,21 @@ O projeto cobre os principais pilares de DevOps em ambiente local:
 ---
  
 ## Hardware (Ainda Preciso Comprar)
- 
-| Componente | Especificação |
-|------------|--------------|
-| Servidor | Lenovo ThinkCentre M920s |
-| CPU | Intel Core i5/i7 (8ª/9ª geração) |
-| RAM | 16 GB DDR4 (mínimo, expansível até 64 GB, 16 gb cada slot) |
-| Armazenamento | 256 GB SSD (mínimo, expansível até 4 TB SSD + HDD) |
-| SO | Ubuntu Server 24.04 LTS |
-| Uso | Servidor dedicado 24/7 |
 
-O ThinkCentre M920s foi escolhido pelo alto custo-benefício no mercado de usados, formato compacto SFF, baixo consumo energético (~35–65W), suporte a até 64 GB DDR4 e confiabilidade corporativa para operação contínua.
+Atualizado em 14/07/2026 — não é mais um único servidor: a frota é composta por múltiplas máquinas físicas com papéis diferentes.
+
+| Papel | Hardware | Quantidade | Função |
+|---|---|---|---|
+| Brain | Lenovo M920q | 1–3 (dia 1: 1, e a 1ª compra real) | Proxmox VE, hospeda só a VM de control-plane do k3s |
+| Worker | HP EliteDesk 800 G4 (i5) | 2–3 (dia 1: 2) | Bare-metal, roda `k3s-agent` direto |
+| DNS/adblock | — | — | Pi-hole rodando como workload do k3s, replicado em 2 workers |
+| Storage | NAS | — | Muito futuro, baixa prioridade |
+
+**Sem Raspberry Pi**: custava igual (~R$2.000) a um brain/worker no mercado do autor e não desbloqueava nada do cluster sozinho — cortado do plano. Bastion vira o próprio computador do autor (Ansible é agentless); DNS/adblock viram um workload replicado dentro do cluster.
+
+Aquisição incremental (não dá pra comprar tudo de uma vez): playbooks Ansible testados em VM local sem custo, depois o 1º M920q (com VMs de worker temporárias nele até os EliteDesk chegarem), EliteDesk por último substituindo as VMs temporárias por workers bare-metal reais.
+
+Sem acesso admin ao roteador principal — IP fixo é configurado por host via Ansible/netplan, não por reserva de DHCP.
  
 ---
  
@@ -69,7 +74,12 @@ O ThinkCentre M920s foi escolhido pelo alto custo-benefício no mercado de usado
 | Source Control | Gitea |
 | Registry | Docker Registry (self-hosted) |
 | Observabilidade | Prometheus + Grafana |
-| IaC | Ansible |
+| IaC | Ansible + Terraform (OpenTofu) |
+| Identidade/SSO | Authentik |
+| Secrets | HashiCorp Vault |
+| GitOps | ArgoCD + Kustomize |
+| TLS interno | cert-manager |
+| Migrations do banco | node-pg-migrate |
  
 ---
  
@@ -128,6 +138,16 @@ HomeLab/
 │   ├── frontend-deployment.yml
 │   ├── ingress.yml
 │   └── namespace.yml
+├── ansible/
+│   ├── ansible.cfg
+│   ├── inventory/
+│   │   └── test.ini
+│   ├── playbooks/
+│   │   └── bootstrap.yml
+│   └── roles/
+│       ├── common/tasks/main.yml
+│       ├── k3s_control_plane/tasks/main.yml
+│       └── k3s_worker/tasks/main.yml
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
@@ -235,6 +255,41 @@ kubectl port-forward -n homelab svc/frontend 8080:80
 
 ---
 
+## Ansible
+
+Usado pra **provisionar** o cluster k3s: pega uma VM crua e a transforma num node funcional (instala k3s, configura chrony, junta ao control-plane). É agentless — roda tudo via SSH, sem daemon instalado no destino. Provisionar é diferente de administrar: o que roda *dentro* do cluster depois (pods, deployments) é gerenciado pelo próprio Kubernetes/k3s, não pelo Ansible.
+
+```
+ansible/
+├── ansible.cfg              # aponta o inventário e o roles_path
+├── inventory/test.ini       # hosts de teste: cp-test, worker-test-01/02
+├── playbooks/bootstrap.yml  # orquestra as roles, na ordem certa
+└── roles/
+    ├── common/              # chrony/NTP em todos os nós do cluster
+    ├── k3s_control_plane/   # instala k3s server, extrai o token de join
+    └── k3s_worker/          # instala k3s agent, usando o token do control-plane
+```
+
+```bash
+cd ansible
+ansible-playbook playbooks/bootstrap.yml
+```
+
+Requer SSH por chave em todos os hosts do inventário. Se a chave tiver passphrase, carregue um `ssh-agent` antes:
+
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+```
+
+Verificar que o cluster subiu:
+
+```bash
+ssh <usuario>@<ip-do-control-plane> "sudo kubectl get nodes -o wide"
+```
+
+---
+
 ## Makefile
 
 Atalhos para os comandos mais usados no dia a dia do projeto.
@@ -309,19 +364,19 @@ flowchart LR
 ---
  
 ## Roadmap
- 
+
 - [x] Docker Compose funcionando localmente
 - [x] k3s local com manifests adaptados
 - [x] Testes E2E contra containers
-- [ ] Ubuntu Server 24.04 no ThinkCentre M920s
-- [ ] Ansible playbook para setup do servidor
-- [ ] Gitea self-hosted
-- [ ] Docker Registry self-hosted
-- [ ] Woodpecker CI configurado
-- [ ] Pipeline completo funcionando
-- [ ] Traefik Ingress configurado
-- [ ] Prometheus + Grafana via Helm
-- [ ] Node Exporter + cAdvisor
+- [x] Playbooks Ansible testados em VM local (brain, worker, k3s)
+- [ ] Gitea, Woodpecker CI e Registry rodando dentro do k3s
+- [ ] Traefik Ingress + TLS interno (cert-manager) + DNS wildcard via Pi-hole
+- [ ] Prometheus + Grafana + Loki via Helm
+- [ ] Authentik (SSO) na frente das UIs internas
+- [ ] Schema real de banco de dados (deploy history) + dashboard admin no frontend
+- [ ] 1º Lenovo M920q comprado e provisionado (Proxmox + control-plane + workers temporários em VM) — *trilha paralela, entra quando o orçamento permitir; não bloqueia os itens de software acima*
+- [ ] HP EliteDesk 800 G4 comprados, substituindo os workers temporários por bare-metal — *trilha paralela*
+- [ ] HashiCorp Vault (secrets) + ArgoCD (GitOps) + multi-brain HA
  
 ---
  
