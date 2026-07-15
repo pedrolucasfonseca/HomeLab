@@ -1,0 +1,13 @@
+---
+- name: Instalar chrony para sincronização de tempo
+  become: true
+  ansible.builtin.package:
+    name: chrony
+    state: present
+
+- name: Garantir que o chrony está habilitado e rodando
+  become: true
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started

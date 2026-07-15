@@ -1,0 +1,10 @@
+---
+- name: Instalar k3s como agent, unindo ao control-plane
+  become: true
+  ansible.builtin.shell: >
+    curl -sfL https://get.k3s.io |
+    K3S_URL={{ hostvars[groups['k3s_control_plane'][0]].k3s_url }}
+    K3S_TOKEN={{ hostvars[groups['k3s_control_plane'][0]].k3s_token }}
+    sh -
+  args:
+    creates: /usr/local/bin/k3s
