@@ -1,0 +1,8 @@
+---
+- name: Instalar Helm e serviços de plataforma no control-plane
+  hosts: k3s_control_plane
+  roles:
+    - helm
+    - gitea
+    - docker_registry
+    - woodpecker

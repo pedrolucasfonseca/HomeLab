@@ -1,0 +1,23 @@
+---
+- name: Adicionar o repositório Helm do Gitea
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: helm repo add gitea-charts https://dl.gitea.com/charts/ && helm repo update
+
+- name: Copiar os values do Gitea
+  become: true
+  ansible.builtin.template:
+    src: values.yaml.j2
+    dest: /tmp/gitea-values.yaml
+    mode: "0600"
+
+- name: Instalar/atualizar o Gitea via Helm
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: >
+    helm upgrade --install gitea gitea-charts/gitea
+    --namespace gitea --create-namespace
+    -f /tmp/gitea-values.yaml
+    --wait --timeout 5m
