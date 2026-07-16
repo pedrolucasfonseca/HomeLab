@@ -1,6 +1,9 @@
 depends_on:
   - lint
 
+when:
+  - event: [push, pull_request]
+
 steps:
   test:
     image: node:20-alpine

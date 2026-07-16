@@ -1,3 +1,6 @@
+updateStrategy:
+  type: Recreate
+
 gitea:
   admin:
     username: gitea_admin
@@ -6,6 +9,8 @@ gitea:
   config:
     database:
       DB_TYPE: sqlite3
+    webhook:
+      ALLOWED_HOST_LIST: "private,loopback"
     session:
       PROVIDER: file
     cache:
