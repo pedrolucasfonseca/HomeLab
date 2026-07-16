@@ -1,0 +1,8 @@
+depends_on:
+  - lint
+
+steps:
+  test:
+    image: node:20-alpine
+    commands:
+      - cd backend && npm ci && npm test
