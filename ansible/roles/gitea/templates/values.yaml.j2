@@ -1,0 +1,48 @@
+gitea:
+  admin:
+    username: gitea_admin
+    password: "{{ gitea_admin_password }}"
+    email: admin@homelab.local
+  config:
+    database:
+      DB_TYPE: sqlite3
+    session:
+      PROVIDER: file
+    cache:
+      ADAPTER: memory
+    queue:
+      TYPE: level
+
+postgresql:
+  enabled: false
+postgresql-ha:
+  enabled: false
+redis-cluster:
+  enabled: false
+valkey-cluster:
+  enabled: false
+valkey:
+  enabled: false
+
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClassName: local-path
+
+service:
+  http:
+    type: NodePort
+    port: 3000
+    nodePort: 30080
+  ssh:
+    type: NodePort
+    port: 22
+    nodePort: 30022
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

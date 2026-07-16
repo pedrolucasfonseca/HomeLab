@@ -1,0 +1,23 @@
+---
+- name: Adicionar o repositório Helm do Docker Registry (twuni)
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: helm repo add twuni https://twuni.github.io/docker-registry.helm && helm repo update
+
+- name: Copiar os values do Registry
+  become: true
+  ansible.builtin.copy:
+    src: values.yaml
+    dest: /tmp/registry-values.yaml
+    mode: "0600"
+
+- name: Instalar/atualizar o Docker Registry via Helm
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: >
+    helm upgrade --install registry twuni/docker-registry
+    --namespace registry --create-namespace
+    -f /tmp/registry-values.yaml
+    --wait --timeout 5m

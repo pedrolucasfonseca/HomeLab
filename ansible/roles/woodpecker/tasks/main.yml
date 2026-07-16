@@ -1,0 +1,17 @@
+---
+- name: Copiar os values do Woodpecker
+  become: true
+  ansible.builtin.template:
+    src: values.yaml.j2
+    dest: /tmp/woodpecker-values.yaml
+    mode: "0600"
+
+- name: Instalar/atualizar o Woodpecker via Helm (chart OCI)
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: >
+    helm upgrade --install woodpecker oci://ghcr.io/woodpecker-ci/helm/woodpecker
+    --namespace woodpecker --create-namespace
+    -f /tmp/woodpecker-values.yaml
+    --wait --timeout 5m
