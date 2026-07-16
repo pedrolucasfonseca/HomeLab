@@ -1,0 +1,5 @@
+steps:
+  lint:
+    image: node:20-alpine
+    commands:
+      - cd frontend && npm ci && npm run lint
