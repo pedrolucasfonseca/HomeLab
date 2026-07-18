@@ -1,0 +1,8 @@
+mirrors:
+  "registry-docker-registry.registry.svc.cluster.local:5000":
+    endpoint:
+      - "http://registry-docker-registry.registry.svc.cluster.local:5000"
+configs:
+  "registry-docker-registry.registry.svc.cluster.local:5000":
+    tls:
+      insecure_skip_verify: true
