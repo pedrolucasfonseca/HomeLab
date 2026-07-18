@@ -1,0 +1,15 @@
+schemaVersion: "2.0.0"
+
+metadataTest:
+  exposedPorts: ["3001"]
+  envVars:
+    - key: NODE_ENV
+      value: production
+
+fileExistenceTests:
+  - name: "Entrypoint existe"
+    path: "/app/src/index.js"
+    shouldExist: true
+  - name: "package.json existe"
+    path: "/app/package.json"
+    shouldExist: true

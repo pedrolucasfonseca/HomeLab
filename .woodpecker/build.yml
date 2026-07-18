@@ -1,0 +1,20 @@
+depends_on:
+  - test
+
+when:
+  - event: [push, pull_request]
+
+steps:
+  build:
+    image: woodpeckerci/plugin-kaniko
+    settings:
+      registry: registry-docker-registry.registry.svc.cluster.local:5000
+      repo: registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend
+      dockerfile: backend/Dockerfile
+      context: backend
+      tags:
+        - ${CI_COMMIT_SHA}
+        - latest
+      insecure: true
+      insecure_pull: true
+      skip_tls_verify: true
