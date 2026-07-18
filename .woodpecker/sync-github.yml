@@ -18,4 +18,3 @@ steps:
       - git fetch --unshallow || true
       - git push github HEAD:refs/heads/$SYNC_BRANCH
       - gh pr create --repo pedrolucasfonseca/HomeLab --base main --head "$SYNC_BRANCH" --title "sync gitea main @ $SYNC_BRANCH" --body "Sincronização automática pós-pipeline verde no Gitea (commit ${CI_COMMIT_SHA})."
-      - gh pr merge "$SYNC_BRANCH" --repo pedrolucasfonseca/HomeLab --auto --merge
