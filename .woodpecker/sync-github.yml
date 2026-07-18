@@ -12,9 +12,8 @@ steps:
       GH_TOKEN:
         from_secret: github_token
     commands:
-      - echo "GH_TOKEN tem ${#GH_TOKEN} caracteres"
       - apk add --no-cache git github-cli
-      - git remote add github "https://x-access-token:${GH_TOKEN}@github.com/pedrolucasfonseca/HomeLab.git"
+      - git remote add github "https://x-access-token:$${GH_TOKEN}@github.com/pedrolucasfonseca/HomeLab.git"
       - SYNC_BRANCH="sync/gitea-$(echo $CI_COMMIT_SHA | cut -c1-8)"
       - git push github HEAD:refs/heads/$SYNC_BRANCH
       - gh pr create --repo pedrolucasfonseca/HomeLab --base main --head "$SYNC_BRANCH" --title "sync gitea main @ $SYNC_BRANCH" --body "Sincronização automática pós-pipeline verde no Gitea (commit ${CI_COMMIT_SHA})."
