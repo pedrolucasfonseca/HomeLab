@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:latest
+          image: 192.168.122.96:30500/homelab-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3001
