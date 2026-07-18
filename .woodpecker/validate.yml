@@ -7,5 +7,12 @@ when:
 steps:
   validate:
     image: gcr.io/gcp-runtimes/container-structure-test
-    commands:
-      - container-structure-test test --driver tar --image registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:${CI_COMMIT_SHA} --config backend/container-structure-test.yml
+    entrypoint:
+      - /container-structure-test
+      - test
+      - --driver
+      - tar
+      - --image
+      - registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:${CI_COMMIT_SHA}
+      - --config
+      - backend/container-structure-test.yml
