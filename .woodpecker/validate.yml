@@ -13,6 +13,6 @@ steps:
       - --driver
       - tar
       - --image
-      - registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:${CI_COMMIT_SHA}
+      - 192.168.122.96:30500/homelab-backend:${CI_COMMIT_SHA}
       - --config
       - backend/container-structure-test.yml

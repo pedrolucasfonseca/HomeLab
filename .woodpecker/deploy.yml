@@ -7,9 +7,9 @@ when:
 
 steps:
   deploy:
-    image: alpine/k8s:1.34.9
+    image: alpine/k8s:1.36.2
     commands:
-      - kubectl set image deployment/backend backend=registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:${CI_COMMIT_SHA} -n homelab
+      - kubectl set image deployment/backend backend=192.168.122.96:30500/homelab-backend:${CI_COMMIT_SHA} -n homelab
       - kubectl rollout status deployment/backend -n homelab --timeout=120s
     backend_options:
       kubernetes:
