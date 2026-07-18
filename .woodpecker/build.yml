@@ -9,7 +9,7 @@ steps:
     image: woodpeckerci/plugin-kaniko
     settings:
       registry: registry-docker-registry.registry.svc.cluster.local:5000
-      repo: registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend
+      repo: homelab-backend
       dockerfile: backend/Dockerfile
       context: backend
       tags:
