@@ -15,5 +15,21 @@ export default defineConfig(({ mode }) => {
         '/health': apiBaseUrl,
       },
     },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: './src/setupTests.js',
+      coverage: {
+        provider: 'v8',
+        all: false,
+        reporter: ['text', 'text-summary'],
+        thresholds: {
+          statements: 80,
+          branches: 50,
+          functions: 80,
+          lines: 80,
+        },
+      },
+    },
   }
 })
