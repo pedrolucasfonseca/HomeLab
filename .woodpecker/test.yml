@@ -5,7 +5,12 @@ when:
   - event: [push, pull_request]
 
 steps:
-  test:
+  test-backend:
     image: node:20-alpine
     commands:
       - cd backend && npm ci && npm test
+
+  test-frontend:
+    image: node:20-alpine
+    commands:
+      - cd frontend && npm ci && npm test

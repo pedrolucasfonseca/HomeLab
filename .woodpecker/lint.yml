@@ -2,7 +2,12 @@ when:
   - event: [push, pull_request]
 
 steps:
-  lint:
+  lint-frontend:
     image: node:20-alpine
     commands:
       - cd frontend && npm ci && npm run lint
+
+  lint-backend:
+    image: node:20-alpine
+    commands:
+      - cd backend && npm ci && npm run lint
