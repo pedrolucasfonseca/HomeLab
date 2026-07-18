@@ -12,7 +12,7 @@ steps:
       GH_TOKEN:
         from_secret: github_token
     commands:
-      - echo "GH_TOKEN está definido? ${GH_TOKEN:+SIM}${GH_TOKEN:-NAO}"
+      - echo "GH_TOKEN tem ${#GH_TOKEN} caracteres"
       - apk add --no-cache git github-cli
       - git remote add github "https://x-access-token:${GH_TOKEN}@github.com/pedrolucasfonseca/HomeLab.git"
       - SYNC_BRANCH="sync/gitea-$(echo $CI_COMMIT_SHA | cut -c1-8)"
