@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: homelab-backend:local
-          imagePullPolicy: Never
+          image: registry-docker-registry.registry.svc.cluster.local:5000/homelab-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3001
           resources:

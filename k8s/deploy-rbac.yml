@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: woodpecker-deploy
+  namespace: woodpecker
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deploy-backend
+  namespace: homelab
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: woodpecker-deploy-backend
+  namespace: homelab
+subjects:
+  - kind: ServiceAccount
+    name: woodpecker-deploy
+    namespace: woodpecker
+roleRef:
+  kind: Role
+  name: deploy-backend
+  apiGroup: rbac.authorization.k8s.io
