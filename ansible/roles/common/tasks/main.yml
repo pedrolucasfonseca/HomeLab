@@ -11,3 +11,36 @@
     name: chrony
     enabled: true
     state: started
+
+- name: Garantir que /etc/rancher/k3s existe
+  become: true
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+
+- name: Configurar containerd para aceitar a registry local insegura
+  become: true
+  ansible.builtin.template:
+    src: registries.yaml.j2
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: "0644"
+  register: registries_config
+
+- name: Reiniciar k3s pra aplicar a config de registry (control-plane)
+  become: true
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  when:
+    - registries_config.changed
+    - "'k3s_control_plane' in group_names"
+
+- name: Reiniciar k3s-agent pra aplicar a config de registry (workers)
+  become: true
+  ansible.builtin.systemd:
+    name: k3s-agent
+    state: restarted
+  when:
+    - registries_config.changed
+    - "'workers' in group_names"
