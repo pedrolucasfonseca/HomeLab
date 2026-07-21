@@ -11,7 +11,8 @@ RUN rm -rf /usr/share/nginx/html/*
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx
+RUN sed -i '/^pid /d' /etc/nginx/nginx.conf && \
+    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx
 
 USER nginx
 
