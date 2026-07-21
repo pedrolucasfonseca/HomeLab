@@ -1,0 +1,37 @@
+---
+- name: Adicionar o repositório Helm do cert-manager (jetstack)
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: helm repo add jetstack https://charts.jetstack.io && helm repo update
+
+- name: Instalar/atualizar o cert-manager via Helm (com CRDs)
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: >
+    helm upgrade --install cert-manager jetstack/cert-manager
+    --version v1.21.0
+    --namespace cert-manager --create-namespace
+    --set crds.enabled=true
+    --set 'extraArgs={--cluster-resource-namespace=cert-manager}'
+    --wait --timeout 5m
+
+- name: Aguardar o webhook do cert-manager ficar pronto
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: kubectl -n cert-manager wait --for=condition=available --timeout=120s deploy/cert-manager-webhook
+
+- name: Copiar a CA raiz e o ClusterIssuer interno
+  become: true
+  ansible.builtin.copy:
+    src: ca-issuer.yml
+    dest: /tmp/ca-issuer.yml
+    mode: "0600"
+
+- name: Aplicar a CA raiz e o ClusterIssuer interno
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  ansible.builtin.shell: kubectl apply -f /tmp/ca-issuer.yml
