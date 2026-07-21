@@ -6,3 +6,4 @@
     - gitea
     - docker_registry
     - woodpecker
+    - cert_manager
