@@ -33,25 +33,7 @@ O projeto cobre os principais pilares de DevOps em ambiente local:
 - **CI/CD local:** Gitea + Woodpecker CI, pipeline de build e deploy
 - **Observabilidade:** Prometheus + Grafana, Node Exporter, cAdvisor
 - **IaC:** Ansible para recriar o setup do zero, playbooks versionados no Gitea
----
- 
-## Hardware (Ainda Preciso Comprar)
 
-Atualizado em 14/07/2026 — não é mais um único servidor: a frota é composta por múltiplas máquinas físicas com papéis diferentes.
-
-| Papel | Hardware | Quantidade | Função |
-|---|---|---|---|
-| Brain | Lenovo M920q | 1–3 (dia 1: 1, e a 1ª compra real) | Proxmox VE, hospeda só a VM de control-plane do k3s |
-| Worker | HP EliteDesk 800 G4 (i5) | 2–3 (dia 1: 2) | Bare-metal, roda `k3s-agent` direto |
-| DNS/adblock | — | — | Pi-hole rodando como workload do k3s, replicado em 2 workers |
-| Storage | NAS | — | Muito futuro, baixa prioridade |
-
-**Sem Raspberry Pi**: custava igual (~R$2.000) a um brain/worker no mercado do autor e não desbloqueava nada do cluster sozinho — cortado do plano. Bastion vira o próprio computador do autor (Ansible é agentless); DNS/adblock viram um workload replicado dentro do cluster.
-
-Aquisição incremental (não dá pra comprar tudo de uma vez): playbooks Ansible testados em VM local sem custo, depois o 1º M920q (com VMs de worker temporárias nele até os EliteDesk chegarem), EliteDesk por último substituindo as VMs temporárias por workers bare-metal reais.
-
-Sem acesso admin ao roteador principal — IP fixo é configurado por host via Ansible/netplan, não por reserva de DHCP.
- 
 ---
  
 ## Stack
@@ -276,7 +258,7 @@ kubectl port-forward -n homelab svc/frontend 8080:80
 
 ## Ansible
 
-Usado pra **provisionar** o cluster k3s: pega uma VM crua e a transforma num node funcional (instala k3s, configura chrony, junta ao control-plane). É agentless — roda tudo via SSH, sem daemon instalado no destino. Provisionar é diferente de administrar: o que roda *dentro* do cluster depois (pods, deployments) é gerenciado pelo próprio Kubernetes/k3s, não pelo Ansible.
+Usado pra **provisionar** o cluster k3s: pega uma VM crua e a transforma num node funcional (instala k3s, configura chrony, junta ao control-plane). É agentless, roda tudo via SSH, sem daemon instalado no destino. Provisionar é diferente de administrar: o que roda *dentro* do cluster depois (pods, deployments) é gerenciado pelo próprio Kubernetes/k3s, não pelo Ansible.
 
 ```
 ansible/
@@ -352,7 +334,7 @@ Sobe o stack via Compose, executa `e2e/container.test.js` contra `http://localho
 bash e2e/smoke.sh
 ```
 
-Valida os endpoints via `http://localhost` (porta 80). Funciona com Docker Compose — o nginx do frontend faz proxy de `/api` e `/health` para o backend.
+Valida os endpoints via `http://localhost` (porta 80). Funciona com Docker Compose, o nginx do frontend faz proxy de `/api` e `/health` para o backend.
 
 ---
  
@@ -377,7 +359,7 @@ flowchart LR
 | `build.yml` | `build` | Builda a imagem do backend via Kaniko (sem Docker daemon) e publica na registry self-hosted |
 | `validate.yml` | `validate` | Valida a imagem publicada com `container-structure-test` (driver `tar`, também sem Docker daemon) |
 | `deploy.yml` | `deploy` | `kubectl set image` + `kubectl rollout status` no Deployment do backend, autenticado via ServiceAccount in-cluster (RBAC restrito ao namespace `homelab`) |
-| `sync-github.yml` | `sync-github` | Só roda em push na `main` do Gitea, após o `deploy` passar: abre automaticamente uma PR espelhando o commit no GitHub (sem merge automático — as duas `main`, Gitea e GitHub, continuam protegidas por PR) |
+| `sync-github.yml` | `sync-github` | Só roda em push na `main` do Gitea, após o `deploy` passar: abre automaticamente uma PR espelhando o commit no GitHub (sem merge automático, as duas `main` (Gitea e GitHub) continuam protegidas por PR) |
 
 A imagem do backend é publicada em `<ip-do-node>:<nodePort-da-registry>/homelab-backend` — usar o **NodePort**, não o DNS interno do cluster (`*.svc.cluster.local`), porque o `containerd` do node não resolve nomes DNS internos do Kubernetes (isso só funciona de dentro de pods, via CoreDNS).
  
@@ -390,13 +372,11 @@ A imagem do backend é publicada em `<ip-do-node>:<nodePort-da-registry>/homelab
 - [x] Testes E2E contra containers
 - [x] Playbooks Ansible testados em VM local (brain, worker, k3s)
 - [x] Gitea, Woodpecker CI e Registry rodando dentro do k3s
-- [x] Pipeline completa (lint → test → build → validate → deploy → sync-github) rodando de ponta a ponta
+- [x] Pipeline completa (lint -> test -> build -> validate -> deploy -> sync-github) rodando de ponta a ponta
 - [ ] Traefik Ingress + TLS interno (cert-manager) + DNS wildcard via Pi-hole
 - [ ] Prometheus + Grafana + Loki via Helm
 - [ ] Authentik (SSO) na frente das UIs internas
 - [ ] Schema real de banco de dados (deploy history) + dashboard admin no frontend
-- [ ] 1º Lenovo M920q comprado e provisionado (Proxmox + control-plane + workers temporários em VM) — *trilha paralela, entra quando o orçamento permitir; não bloqueia os itens de software acima*
-- [ ] HP EliteDesk 800 G4 comprados, substituindo os workers temporários por bare-metal — *trilha paralela*
 - [ ] HashiCorp Vault (secrets) + ArgoCD (GitOps) + multi-brain HA
  
 ---
