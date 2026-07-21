@@ -2,7 +2,9 @@ depends_on:
   - build
 
 when:
-  - event: [push, pull_request]
+  - event: pull_request
+  - event: push
+    branch: main
 
 steps:
   validate:
