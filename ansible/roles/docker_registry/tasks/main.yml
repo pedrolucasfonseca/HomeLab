@@ -18,6 +18,7 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   ansible.builtin.shell: >
     helm upgrade --install registry twuni/docker-registry
+    --version 3.0.0
     --namespace registry --create-namespace
     -f /tmp/registry-values.yaml
     --wait --timeout 5m
