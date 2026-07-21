@@ -18,6 +18,7 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   ansible.builtin.shell: >
     helm upgrade --install gitea gitea-charts/gitea
+    --version 12.7.0
     --namespace gitea --create-namespace
     -f /tmp/gitea-values.yaml
     --wait --timeout 5m

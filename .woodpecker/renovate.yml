@@ -1,0 +1,15 @@
+when:
+  event: cron
+  cron: renovate-weekly
+
+steps:
+  renovate:
+    image: renovate/renovate:latest
+    environment:
+      RENOVATE_PLATFORM: gitea
+      RENOVATE_ENDPOINT: http://gitea-http.gitea.svc.cluster.local:3000
+      RENOVATE_TOKEN:
+        from_secret: gitea_renovate_token
+      RENOVATE_REPOSITORIES: pedrolucas/HomeLab
+    commands:
+      - renovate

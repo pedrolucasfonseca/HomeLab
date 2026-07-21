@@ -33,25 +33,7 @@ O projeto cobre os principais pilares de DevOps em ambiente local:
 - **CI/CD local:** Gitea + Woodpecker CI, pipeline de build e deploy
 - **Observabilidade:** Prometheus + Grafana, Node Exporter, cAdvisor
 - **IaC:** Ansible para recriar o setup do zero, playbooks versionados no Gitea
----
- 
-## Hardware (Ainda Preciso Comprar)
 
-Atualizado em 14/07/2026 — não é mais um único servidor: a frota é composta por múltiplas máquinas físicas com papéis diferentes.
-
-| Papel | Hardware | Quantidade | Função |
-|---|---|---|---|
-| Brain | Lenovo M920q | 1–3 (dia 1: 1, e a 1ª compra real) | Proxmox VE, hospeda só a VM de control-plane do k3s |
-| Worker | HP EliteDesk 800 G4 (i5) | 2–3 (dia 1: 2) | Bare-metal, roda `k3s-agent` direto |
-| DNS/adblock | — | — | Pi-hole rodando como workload do k3s, replicado em 2 workers |
-| Storage | NAS | — | Muito futuro, baixa prioridade |
-
-**Sem Raspberry Pi**: custava igual (~R$2.000) a um brain/worker no mercado do autor e não desbloqueava nada do cluster sozinho — cortado do plano. Bastion vira o próprio computador do autor (Ansible é agentless); DNS/adblock viram um workload replicado dentro do cluster.
-
-Aquisição incremental (não dá pra comprar tudo de uma vez): playbooks Ansible testados em VM local sem custo, depois o 1º M920q (com VMs de worker temporárias nele até os EliteDesk chegarem), EliteDesk por último substituindo as VMs temporárias por workers bare-metal reais.
-
-Sem acesso admin ao roteador principal — IP fixo é configurado por host via Ansible/netplan, não por reserva de DHCP.
- 
 ---
  
 ## Stack
@@ -65,16 +47,17 @@ Sem acesso admin ao roteador principal — IP fixo é configurado por host via A
 | Containers | Docker + Docker Compose |
 | Orquestração | Kubernetes (k3s) |
 | Ingress | Traefik (incluso no k3s) |
+| IaC | Ansible |
+| Source Control | Gitea (self-hosted, dentro do k3s) |
+| CI/CD | Woodpecker CI (dentro do k3s) |
+| Registry | Docker Registry self-hosted (dentro do k3s) |
 
 ### Futura
 
 | Camada | Tecnologia |
 |--------|-----------|
-| CI/CD | Woodpecker CI |
-| Source Control | Gitea |
-| Registry | Docker Registry (self-hosted) |
 | Observabilidade | Prometheus + Grafana |
-| IaC | Ansible + Terraform (OpenTofu) |
+| IaC (nuvem/hypervisor) | Terraform (OpenTofu) |
 | Identidade/SSO | Authentik |
 | Secrets | HashiCorp Vault |
 | GitOps | ArgoCD + Kustomize |
@@ -114,6 +97,8 @@ HomeLab/
 │   │   ├── app.js
 │   │   └── index.js
 │   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── container-structure-test.yml
 │   ├── .dockerignore
 │   ├── .env.example
 │   └── package.json
@@ -122,6 +107,8 @@ HomeLab/
 │   │   ├── assets/
 │   │   ├── App.css
 │   │   ├── App.jsx
+│   │   ├── App.test.jsx
+│   │   ├── setupTests.js
 │   │   ├── index.css
 │   │   └── main.jsx
 │   ├── public/
@@ -136,18 +123,32 @@ HomeLab/
 ├── k8s/
 │   ├── backend-deployment.yml
 │   ├── frontend-deployment.yml
+│   ├── deploy-rbac.yml
 │   ├── ingress.yml
 │   └── namespace.yml
+├── .woodpecker/
+│   ├── lint.yml
+│   ├── test.yml
+│   ├── build.yml
+│   ├── validate.yml
+│   ├── deploy.yml
+│   └── sync-github.yml
 ├── ansible/
 │   ├── ansible.cfg
 │   ├── inventory/
-│   │   └── test.ini
+│   │   ├── test.ini
+│   │   └── group_vars/all/vault.yml
 │   ├── playbooks/
-│   │   └── bootstrap.yml
+│   │   ├── bootstrap.yml
+│   │   └── platform.yml
 │   └── roles/
 │       ├── common/tasks/main.yml
 │       ├── k3s_control_plane/tasks/main.yml
-│       └── k3s_worker/tasks/main.yml
+│       ├── k3s_worker/tasks/main.yml
+│       ├── helm/tasks/main.yml
+│       ├── gitea/tasks/main.yml
+│       ├── docker_registry/tasks/main.yml
+│       └── woodpecker/tasks/main.yml
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
@@ -232,7 +233,7 @@ curl http://localhost:3001/health
 # {"status":"ok","timestamp":"2026-01-01T00:00:00.000Z"}
  
 curl http://localhost:3001/api
-# {"message":"HomeLab API","version":"0.1.0"}
+# {"message":"HomeLab API","version":"0.2.0"}
 ```
  
 ---
@@ -257,7 +258,7 @@ kubectl port-forward -n homelab svc/frontend 8080:80
 
 ## Ansible
 
-Usado pra **provisionar** o cluster k3s: pega uma VM crua e a transforma num node funcional (instala k3s, configura chrony, junta ao control-plane). É agentless — roda tudo via SSH, sem daemon instalado no destino. Provisionar é diferente de administrar: o que roda *dentro* do cluster depois (pods, deployments) é gerenciado pelo próprio Kubernetes/k3s, não pelo Ansible.
+Usado pra **provisionar** o cluster k3s: pega uma VM crua e a transforma num node funcional (instala k3s, configura chrony, junta ao control-plane). É agentless, roda tudo via SSH, sem daemon instalado no destino. Provisionar é diferente de administrar: o que roda *dentro* do cluster depois (pods, deployments) é gerenciado pelo próprio Kubernetes/k3s, não pelo Ansible.
 
 ```
 ansible/
@@ -333,33 +334,34 @@ Sobe o stack via Compose, executa `e2e/container.test.js` contra `http://localho
 bash e2e/smoke.sh
 ```
 
-Valida os endpoints via `http://localhost` (porta 80). Funciona com Docker Compose — o nginx do frontend faz proxy de `/api` e `/health` para o backend.
+Valida os endpoints via `http://localhost` (porta 80). Funciona com Docker Compose, o nginx do frontend faz proxy de `/api` e `/health` para o backend.
 
 ---
  
 ## CI/CD
- 
-O pipeline será configurado quando o homelab estiver de pé com Gitea e Woodpecker CI.
- 
-Fluxo planejado:
+
+Gitea, Woodpecker CI e Docker Registry rodam **dentro do próprio k3s** (via Helm, provisionados pelo Ansible). Todo push aciona a pipeline em `.woodpecker/`:
 
 ```mermaid
 flowchart LR
-  push[git push\nGitea] --> test[test\nnpm test]
-  test -->|falha| block([bloqueado])
-  test -->|passa| build[build\nDocker image]
-  build --> registry[(push\nRegistry local)]
-  registry --> deploy[deploy\nkubectl apply]
-  deploy --> verify[rollout verify\nkubectl rollout status]
+  push[git push\nGitea] --> lint[lint\nESLint front + back]
+  lint --> test[test\nJest + Vitest]
+  test --> build[build\nKaniko]
+  build --> validate[validate\ncontainer-structure-test]
+  validate --> deploy[deploy\nkubectl set image + rollout status]
+  deploy -->|só push na main| sync[sync-github\nabre PR espelhando no GitHub]
 ```
- 
-| Etapa | Descrição |
-|-------|-----------|
-| `test` | Executa `npm test`, bloqueia se falhar |
-| `build` | Build das imagens Docker |
-| `push` | Push para o registry self-hosted |
-| `deploy` | Atualiza os manifests no k3s |
-| `rollout verify` | Confirma que os pods subiram |
+
+| Arquivo | Etapa | Descrição |
+|---------|-------|-----------|
+| `lint.yml` | `lint-frontend` / `lint-backend` | ESLint no frontend e no backend |
+| `test.yml` | `test-backend` / `test-frontend` | Jest (backend) e Vitest+RTL (frontend), com gate de cobertura |
+| `build.yml` | `build` | Builda a imagem do backend via Kaniko (sem Docker daemon) e publica na registry self-hosted |
+| `validate.yml` | `validate` | Valida a imagem publicada com `container-structure-test` (driver `tar`, também sem Docker daemon) |
+| `deploy.yml` | `deploy` | `kubectl set image` + `kubectl rollout status` no Deployment do backend, autenticado via ServiceAccount in-cluster (RBAC restrito ao namespace `homelab`) |
+| `sync-github.yml` | `sync-github` | Só roda em push na `main` do Gitea, após o `deploy` passar: abre automaticamente uma PR espelhando o commit no GitHub (sem merge automático, as duas `main` (Gitea e GitHub) continuam protegidas por PR) |
+
+A imagem do backend é publicada em `<ip-do-node>:<nodePort-da-registry>/homelab-backend` — usar o **NodePort**, não o DNS interno do cluster (`*.svc.cluster.local`), porque o `containerd` do node não resolve nomes DNS internos do Kubernetes (isso só funciona de dentro de pods, via CoreDNS).
  
 ---
  
@@ -369,13 +371,12 @@ flowchart LR
 - [x] k3s local com manifests adaptados
 - [x] Testes E2E contra containers
 - [x] Playbooks Ansible testados em VM local (brain, worker, k3s)
-- [ ] Gitea, Woodpecker CI e Registry rodando dentro do k3s
+- [x] Gitea, Woodpecker CI e Registry rodando dentro do k3s
+- [x] Pipeline completa (lint -> test -> build -> validate -> deploy -> sync-github) rodando de ponta a ponta
 - [ ] Traefik Ingress + TLS interno (cert-manager) + DNS wildcard via Pi-hole
 - [ ] Prometheus + Grafana + Loki via Helm
 - [ ] Authentik (SSO) na frente das UIs internas
 - [ ] Schema real de banco de dados (deploy history) + dashboard admin no frontend
-- [ ] 1º Lenovo M920q comprado e provisionado (Proxmox + control-plane + workers temporários em VM) — *trilha paralela, entra quando o orçamento permitir; não bloqueia os itens de software acima*
-- [ ] HP EliteDesk 800 G4 comprados, substituindo os workers temporários por bare-metal — *trilha paralela*
 - [ ] HashiCorp Vault (secrets) + ArgoCD (GitOps) + multi-brain HA
  
 ---

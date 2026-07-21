@@ -5,13 +5,27 @@ when:
   - event: [push, pull_request]
 
 steps:
-  build:
+  build-backend:
     image: woodpeckerci/plugin-kaniko
     settings:
       registry: 192.168.122.96:30500
       repo: homelab-backend
       dockerfile: backend/Dockerfile
       context: backend
+      tags:
+        - ${CI_COMMIT_SHA}
+        - latest
+      insecure: true
+      insecure_pull: true
+      skip_tls_verify: true
+
+  build-frontend:
+    image: woodpeckerci/plugin-kaniko
+    settings:
+      registry: 192.168.122.96:30500
+      repo: homelab-frontend
+      dockerfile: frontend/Dockerfile
+      context: frontend
       tags:
         - ${CI_COMMIT_SHA}
         - latest

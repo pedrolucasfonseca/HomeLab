@@ -11,6 +11,8 @@ steps:
     commands:
       - kubectl set image deployment/backend backend=192.168.122.96:30500/homelab-backend:${CI_COMMIT_SHA} -n homelab
       - kubectl rollout status deployment/backend -n homelab --timeout=120s
+      - kubectl set image deployment/frontend frontend=192.168.122.96:30500/homelab-frontend:${CI_COMMIT_SHA} -n homelab
+      - kubectl rollout status deployment/frontend -n homelab --timeout=120s
     backend_options:
       kubernetes:
         serviceAccountName: woodpecker-deploy
