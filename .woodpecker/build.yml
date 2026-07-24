@@ -14,10 +14,8 @@ steps:
       repo: homelab-backend
       dockerfile: backend/Dockerfile
       context: backend
-      username:
-        from_secret: registry_username
-      password:
-        from_secret: registry_password
+      docker_config:
+        from_secret: docker_config
       tags:
         - ${CI_COMMIT_SHA}
         - latest
@@ -32,10 +30,8 @@ steps:
       repo: homelab-frontend
       dockerfile: frontend/Dockerfile
       context: frontend
-      username:
-        from_secret: registry_username
-      password:
-        from_secret: registry_password
+      docker_config:
+        from_secret: docker_config
       tags:
         - ${CI_COMMIT_SHA}
         - latest
