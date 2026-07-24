@@ -14,8 +14,8 @@ steps:
       repo: homelab-backend
       dockerfile: backend/Dockerfile
       context: backend
-      docker_config:
-        from_secret: docker_config
+      docker_config_json:
+        from_secret: docker_config_json
       tags:
         - ${CI_COMMIT_SHA}
         - latest
@@ -30,8 +30,8 @@ steps:
       repo: homelab-frontend
       dockerfile: frontend/Dockerfile
       context: frontend
-      docker_config:
-        from_secret: docker_config
+      docker_config_json:
+        from_secret: docker_config_json
       tags:
         - ${CI_COMMIT_SHA}
         - latest
