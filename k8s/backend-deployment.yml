@@ -13,10 +13,30 @@ spec:
       labels:
         app: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      imagePullSecrets:
+        - name: registry-creds
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: backend
           image: 192.168.122.96:30500/homelab-backend:${CI_COMMIT_SHA}
           imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - containerPort: 3001
           resources:
@@ -43,6 +63,9 @@ spec:
               port: 3001
             initialDelaySeconds: 15
             periodSeconds: 20
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
 ---
 apiVersion: v1
 kind: Service
