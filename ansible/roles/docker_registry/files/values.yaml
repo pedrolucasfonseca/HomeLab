@@ -2,6 +2,10 @@ service:
   type: NodePort
   nodePort: 30500
 
+secrets:
+  htpasswd: |
+    deploy-user:$2y$05$NS07SMoDUxo4ydD.daAtT.rdl29vO.bvD.p3JQ06F7LYqr9kB8j8e
+
 persistence:
   enabled: true
   size: 2Gi
