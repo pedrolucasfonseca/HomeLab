@@ -7,8 +7,19 @@ when:
     branch: main
 
 steps:
+  prepare-docker-auth:
+    image: alpine
+    environment:
+      DOCKER_CONFIG_JSON:
+        from_secret: docker_config_json
+    commands:
+      - mkdir -p /woodpecker/src/.docker-auth
+      - echo "$DOCKER_CONFIG_JSON" > /woodpecker/src/.docker-auth/config.json
+
   validate:
     image: gcr.io/gcp-runtimes/container-structure-test
+    environment:
+      DOCKER_CONFIG: /woodpecker/src/.docker-auth
     entrypoint:
       - /container-structure-test
       - test

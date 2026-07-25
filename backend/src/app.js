@@ -11,7 +11,16 @@ const apiRoutes = require('./routes/api');
 const app = express();
 
 app.use(helmet());
-app.use(cors({origin: process.env.ALLOWED_ORIGIN }));
+
+app.use((req, res, next) => {
+    res.setHeader(
+        'Permissions-Policy',
+        'geolocation=(), camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
+    );
+    next();
+});
+
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN }));
 app.use(morgan(morganFormat));
 app.use(express.json());
 

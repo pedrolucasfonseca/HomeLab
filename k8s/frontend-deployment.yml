@@ -13,10 +13,33 @@ spec:
       labels:
         app: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: registry-creds
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-conf
+          emptyDir: {}
       containers:
         - name: frontend
-          image: 192.168.122.96:30500/homelab-frontend:latest
+          image: 192.168.122.96:30500/homelab-frontend:${CI_COMMIT_SHA}
           imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - containerPort: 80
           resources:
@@ -43,6 +66,14 @@ spec:
               port: 80
             initialDelaySeconds: 15
             periodSeconds: 20
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-tmp
+              mountPath: /tmp
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+
 ---
 apiVersion: v1
 kind: Service
